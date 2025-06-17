@@ -1,411 +1,443 @@
 #!/bin/bash
 
+# 🇫🇷 Language file - French
 
-# 🇬🇧 Language file – English
+# ==================================================================
+# ✅ GENERAL MESSAGES - All chapters
+# ==================================================================
 
-# ✅ 🌍 Silence locale warnings
+# Local warnings
 export LANG=C.UTF-8
 export LC_ALL=C.UTF-8
 
-# Introduction message (called after language selection)
-msg_lang() {
-  echo -e "\n📘 Welcome to the Chapter 4 – SPF & DKIM setup script"
-  echo "ℹ️  This script will guide you step by step to configure SPF, DKIM, and DMARC for your mail server."
-}
-# Used for : Chapter 1 -
-
-
-# Used for : # Chapter 2 - Postfix and Dovecot Installation
-
-# Introduction and steps
-msg_intro_chap2="🎉 Welcome to the secure email server setup script with Postfix and Dovecot."
-msg_steps_chap2="📜 This script will follow the steps:
-1. Check the status of **UFW** (firewall) and enable it if necessary.
-2. Open the necessary ports for email handling.
-3. Install **Postfix** for outgoing email management (SMTP).
-4. Install **Dovecot** for incoming email management (IMAP/POP3).
-5. Enable **TLS** encryption to secure communications.
-6. Run tests to verify the correct configuration of services."
-
-# Messages for UFW activation and ports
-msg_select_language_chap2="🌐 Choose your language:"
-msg_select_english_chap2="1) Français"
-msg_select_french_chap2="2) English"
-msg_prompt_domain_chap2="Enter your domain (e.g., example.com)"
-msg_prompt_mail_fqdn_chap2="Enter your mail server FQDN (e.g., mail.${DOMAIN})"
-msg_banner_chap2="###########################################\n💼 Postfix & Dovecot – Mail Server Setup 💼\n###########################################"
-
-# Status messages for UFW and opening ports
-msg_active_ufw_chap2="✅ UFW is already active."
-msg_inactive_ufw_chap2="❌ UFW is not active on this server."
-msg_enable_ufw_chap2="Would you like to enable UFW to secure your server? (y/n)"
-msg_open_ports_chap2="🌐 Opening necessary ports in the firewall..."
-msg_open_ports_complete_chap2="✅ Ports have been successfully opened."
-
-# Confirmation messages for installation and tests
-msg_install_postfix_chap2="🌐 Installing Postfix..."
-msg_install_dovecot_chap2="🌐 Installing Dovecot..."
-msg_test_email_chap2="🌐 Testing email sending via Postfix. You will be asked to enter the **subject** and **description** of the email."
-msg_prompt_subject="Please enter the subject of the email"
-msg_prompt_description="Please enter the description of the email"
-msg_test_imap_chap2="🌐 Testing IMAP connection via Dovecot..."
-msg_restart_services_chap2="🌐 Restarting Postfix and Dovecot..."
-msg_success_chap2="🎉 Mail server setup completed successfully!"
-
-# Messages for configuration test steps
-msg_config_test_postfix_chap2="🌐 Verifying Postfix configuration..."
-msg_config_test_dovecot_chap2="🌐 Verifying Dovecot configuration..."
-
-# Additional messages for missing steps
-msg_check_ufw_chap2="🌐 Checking UFW (firewall) status..."
-msg_postfix_config_chap2="Configuring Postfix with domain $DOMAIN..."
-msg_dovecot_maildir_config_chap2="Configuring Dovecot for Maildir..."
-msg_dovecot_tls_config_chap2="Configuring Dovecot for TLS..."
-
-
-
-
-
-# Used for : Chapter 3 -
-
-
-# Used for : Chapter 4 - SPF & DKIM (installation) Script folder
-
-# ✅ === MESSAGES FOR INSTALLATION ===
-
-msg_banner() {
-  echo -e "\n\n 📘 SPF & DKIM Configuration Script - Chapter 4"
-}
-
-msg_intro() {
-  echo "📬 SPF & DKIM setup script based on LinuxBabe (dynamic adapted version)"
-  echo "📚 Steps:"
-  echo "  1. SPF DNS record"
-  echo "  2. Install postfix-policyd-spf-python"
-  echo "  3. Install OpenDKIM"
-  echo "  4. Create signing/key/trusted tables"
-  echo "  5. Generate DKIM key pair"
-  echo "  6. Publish DKIM public key in DNS"
-  echo "  7. Test DKIM key with opendkim-testkey"
-  echo "  8. Connect OpenDKIM ↔️ Postfix via Unix socket"
-  echo "  9. Final SPF & DKIM verification with swaks/dig"
-}
-
-msg_domain_request() {
-  echo -n "🌐 Main domain name (e.g. domain.tld): "
-}
-
-msg_mailfrom_request() {
-  echo -n "📧 Email address used for tests (e.g. postmaster@${DOMAIN}): "
-}
-
-msg_maildest_request() {
-  echo -n "📨 Destination address for testing (e.g. Gmail, Outlook): "
-}
-
-msg_fqdn_request() {
-  echo -n "🌐 FQDN of the mail server (e.g. mail.${DOMAIN}): "
-}
-
-# ✅ === PART 1 – SPF Record ===
-
-msg_step1_title() {
-  echo -e "\n📘 Step 1 - SPF DNS Record"
-}
-
-msg_step1_instruction() {
-  echo "Please add the following TXT record in your DNS zone for domain ${DOMAIN}:"
-  echo
-  echo "   Name  : @"
-  echo "   Type  : TXT"
-  echo "   Value : v=spf1 mx ~all"
-  echo
-  echo "💡 This record allows only the MX servers of ${DOMAIN} to send mail."
-  echo "🕒 Wait for DNS propagation before continuing."
-}
-
-msg_step1_continue_prompt() {
-  echo -n "✅ Press Enter once the SPF record is added and propagated..."
-}
-
-msg_step1_dig_check() {
-  echo "🔍 Checking DNS with dig..."
-}
-
-msg_step1_confirm_prompt() {
-  echo -n "👁️ Did you visually confirm the SPF record? (Y/N): "
-}
-
-msg_step1_confirmed() {
-  echo "✅ SPF record confirmed by user."
-}
-
-msg_step1_not_confirmed() {
-  echo "⚠️ Step 1 not validated. You can repeat this step later."
-}
-
-msg_step1_success() {
-  echo -e "\n\n✅ SPF record verified. Step 1 completed successfully."
-}
-
-# ✅ === PART 2 – SPF Agent ===
-
-msg_step2_title() {
-  echo -e "\n\n📘 Step 2 - Install postfix-policyd-spf-python"
-}
-
-msg_step2_check_installed() {
-  echo -e "\n\n🔍 Checking if the package is already installed..."
-}
-
-msg_step2_already_installed() {
-  echo -e "\n\n📦 Package postfix-policyd-spf-python is already installed."
-}
-
-msg_step2_installing() {
-  echo -e "\n\n📥 Installing required package..."
-}
-
-msg_step2_success() {
-  echo -e "\n\n✅ SPF Policy Agent installed successfully."
-}
-
-msg_step2_failure() {
-  echo -e "\n\n❌ Failed to install postfix-policyd-spf-python."
-}
-
-# ✅ === PART 3 – Install OpenDKIM ===
-
-msg_step3_title() {
-  echo -e "\n📘 Step 3 - Installing OpenDKIM"
-}
-
-msg_step3_start() {
-  echo "🔧 Creating basic folders and files for OpenDKIM"
-}
-
-msg_step3_success() {
-  echo "✅ Step 3 completed: OpenDKIM installed and config file updated."
-}
-
-# ✅ === PART 4 – DKIM Tables ===
-
-msg_step4_title() {
-  echo -e "\n📘 Step 4 - Create signing.table, key.table and trusted.hosts"
-}
-
-msg_step4_prepare_dirs() {
-  echo "📂 Preparing OpenDKIM config directories..."
-}
-
-msg_step4_signing_table_ok() {
-  echo "✅ signing.table configured."
-}
-
-msg_step4_key_table_ok() {
-  echo "✅ key.table configured."
-}
-
-msg_step4_trusted_hosts_ok() {
-  echo "✅ trusted.hosts configured."
-}
-
-msg_step4_files_created() {
-  echo "✅ DKIM tables created and configured."
-}
-
-# ✅ === PART 5 – DKIM Key Generation ===
-
-msg_step5_title() {
-  echo "🔐 Step 5 - Generating DKIM private/public keys for ${DOMAIN}"
-}
-
-msg_step5_existing_key() {
-  echo "⚠️ A DKIM key already exists for this domain. No new key generated."
-}
-
-msg_step5_key_generating() {
-  echo "🔐 Generating DKIM key pair (2048 bits) for ${DOMAIN}..."
-}
-
-msg_step5_key_success() {
-  echo "✅ Key pair successfully generated for ${DOMAIN}"
-}
-
-# ✅ === PART 6 – DNS Publication ===
-
-msg_step6_title() {
-  echo "📘 Step 6 - Publishing DKIM public key in DNS"
-}
-
-msg_step6_dkim_raw_display() {
-  echo -e "\n\n📜 Raw key content (OpenDKIM format):"
-}
-
-msg_step6_dkim_cleaned_intro() {
-  echo -e "\n\n🔧 Preparing key for DNS (cleaned, 5 spaces between segments):"
-}
-
-msg_step6_dns_insert() {
-  echo -e "\n\n🧾 Add the following TXT record to: default._domainkey.${DOMAIN}"
-}
-
-msg_step6_dkim_pause_copy() {
-  echo -e "\n\n⏸️  Press Enter once you've added the key to your registrar DNS..."
-}
-
-msg_step6_dkim_exported() {
-  echo -e "\n\n✅ DKIM public key exported to: $EXPORT_KEY_FILE"
-}
-
-msg_step6_success() {
-  echo -e "\n\n🎉 Congratulations! SPF and DKIM are now configured for ${DOMAIN}."
-}
-
-# ✅ === PART 7 – DKIM Test ===
-
-msg_step7_title() {
-  echo "🧪 Step 7 - Verifying DKIM key published in DNS"
-}
-
-msg_step7_checking() {
-  echo "🔍 Checking with opendkim-testkey for: default._domainkey.${DOMAIN}"
-}
-
-msg_step7_timeout_error() {
-  echo "⚠️ Error: query timed out detected"
-}
-
-msg_step7_fixing_anchor() {
-  echo "🔧 Automatically commenting TrustAnchorFile line"
-}
-
-msg_step7_opendkim_restarted() {
-  echo "✅ OpenDKIM service restarted after correction"
-}
-
-msg_step7_no_anchor() {
-  echo "ℹ️ TrustAnchorFile line not found, no action needed"
-}
-
-msg_step7_valid_key() {
-  echo "✅ DKIM: valid key successfully published for default._domainkey.${DOMAIN}"
-}
-
-msg_step7_success() {
-  echo "✅ Step 7 complete: DKIM key test succeeded for ${DOMAIN}."
-}
-
-# ✅ === PART 8 – OpenDKIM ↔️ Postfix Socket ===
-
-msg_step8_title() {
-  echo -e "\n📘 Step 8 - Connecting OpenDKIM to Postfix via Unix socket"
-}
-
-msg_step8_conf_opendkim() {
-  echo "📝 Editing /etc/opendkim.conf"
-}
-
-msg_step8_conf_default() {
-  echo "📝 Editing /etc/default/opendkim"
-}
-
-msg_step8_conf_postfix() {
-  echo "📝 Editing /etc/postfix/main.cf"
-}
-
-msg_step8_socket_replaced() {
-  echo "🔧 Existing Socket line found, commented and new line added"
-}
-
-msg_step8_socket_added() {
-  echo "➕ No Socket line found, added at end of file"
-}
-
-msg_step8_postfix_milter() {
-  echo -e "# 📬 OpenDKIM Milter"
-}
-
-msg_step8_services_restart() {
-  echo "🔄 Restarting OpenDKIM and Postfix"
-}
-
-msg_step8_success() {
-  echo "✅ Step 8 complete: OpenDKIM connected to Postfix via Unix socket."
-}
-
-# ✅ === PART 9 – Final Check with swaks/openssl ===
-
-msg_step9_title() {
-  echo -e "\n📘 Step 9 - Full verification of mail server"
-}
-
-msg_step9_start() {
-  echo "📮 Step 9 - Real-world testing of your mail server"
-}
-
-msg_step9_install_swaks() {
-  echo "📦 Installing swaks package for SMTP tests..."
-}
-
-msg_step9_check_auth() {
-  echo "✉️ Sending test email to check-auth@verifier.port25.com"
-}
-
-msg_step9_wait_result() {
-  echo "📥 Wait a few seconds, then confirm SPF / DKIM / DMARC show PASS"
-}
-
-msg_step9_prompt_continue() {
-  echo "✔️ Press Enter once you've seen the result..."
-}
-
-msg_step9_ask_mailtester() {
-  echo "Would you like to run a Mail-tester test? (Y/N): "
-}
-
-msg_step9_prompt_mailtester() {
-  echo "➡️ Mail-tester test address (copy from website): "
-}
-
-msg_step9_sending_mailtester() {
-  echo "✉️ Sending email to Mail-tester..."
-}
-
-msg_step9_mailtester_link() {
-  echo "🔗 Check your score at: https://www.mail-tester.com"
-}
-
-msg_step9_tls_check() {
-  echo -e "\n🔐 Testing STARTTLS on port 587 using OpenSSL"
-}
-
-msg_step9_success() {
-  echo -e "\n✅ Step 9 complete. You can now validate the displayed results."
-}
-
-# ✅ === REVERT MESSAGES ===
-
+msg_lang="🌍 Selected language: French"
+msg_select_language="🌐 Choose your language:"
+msg_select_english="1) French"
+msg_select_french="2) English"
+msg_invalid_choice="❌ Invalid choice. French selected by default."
+
+# Common user prompts
+msg_prompt_domain="Enter your domain (e.g. example.com)"
+msg_prompt_mail_from="Shipping email address"
+msg_prompt_mail_dest="Destination email address (test)"
+msg_prompt_mail_fqdn="Enter your FQDN mail server name (e.g. mail.domain.tld)"
+msg_prompt_confirm="Do you wish to continue? (o/n)"
+
+# 🔐 General messages for UFW firewall management (used across chapters)
+
+msg_ufw_not_installed="UFW is not installed. No active firewall detected."
+msg_active_ufw="✅ UFW is already enabled."
+msg_inactive_ufw="❌ UFW is not enabled on this server."
+msg_ufw_keep_enabled="UFW is enabled. Do you want to keep it enabled?"
+msg_ufw_disabling="Disabling UFW..."
+msg_ufw_disabled="UFW has been disabled."
+msg_enable_ufw="Would you like to enable UFW to secure your server?"
+msg_ufw_left_disabled="UFW was left disabled."
+msg_open_ports="🌐 Opening required firewall ports..."
+msg_open_ports_complete_chap2="✅ Ports were opened and UFW was enabled."
+msg_press_enter="Press [Enter] to continue..."
+
+
+# 🔁 GENERAL MESSAGES - Restore / Uninstall
 msg_revert_intro() {
-  echo -e "\n\n🔁 Reverting SPF & DKIM configuration – Full cleanup"
+  echo -e "SPF & DKIM restore script - Complete cancellation"
 }
 
 msg_revert_warning() {
-  echo -e "\n\n⚠️ Warning: all DKIM/SPF related files, packages and configs have been removed."
+  echo -e "\n\n⚠️ Warning: all DKIM/SPF-related files, packages and configurations have been deleted."
 }
 
 msg_revert_done() {
-  echo -e "\n\n✅ Revert complete. Previous configuration removed."
+  echo -e "Restore complete. The previous configuration has been deleted."
 }
 
+# 🧹 Optional cleanup (exports / backups)
 ask_optional_cleanup() {
-  echo -e "\n\n🗂️ Cleanup of export and backup folders (optional)"
-  echo
-  read -rp "Do you want to delete the backup and export folders? (y/N): " CLEAN_CHOICE
-  if [[ "$CLEAN_CHOICE" =~ ^[Yy]$ ]]; then
+  echo -e "\nn🗂️ Deletion of exports and backups (optional)"
+  echo -e "\n"
+  read -rp "Would you like to delete backup and export folders (y/N): " CLEAN_CHOICE
+  if [[ \"$CLEAN_CHOICE\" =~ ^[Oo]$ ]]; then
     return 0
   else
-    echo "⏭️ Deletion skipped."
+    echo \"⏭️ Deletion ignored.\"
     return 1
   fi
 }
+
+# Common states
+msg_starting="🚀 Starting script..."
+msg_done="✅ Finished"
+msg_error="❌ An error has occurred"
+
+# ------------------------------------------------------------------
+# 📘            ------- introduction -------
+# ------------------------------------------------------------------
+
+# === INTRO BANNER ===
+msg_banner_chap1() {
+  echo "📘 Postfix Configuration Script – Chapter 01"
+}
+
+msg_intro_chap1() {
+  echo "🚀 This script installs and tests a basic Postfix server on Ubuntu."
+}
+
+msg_steps_chap1() {
+  echo "🧾 This script will execute all required steps to configure Postfix on Ubuntu (14 steps included in this chapter)."
+}
+
+msg_steps_chap1_list() {
+  echo -e "
+1️⃣  Initialize the main domain
+2️⃣  Add the FQDN to /etc/hosts
+3️⃣  Verify the system hostname
+4️⃣  Check DNS records
+5️⃣  Update the system and install Postfix
+6️⃣  Check the firewall status
+7️⃣  Test outbound connection on port 25
+8️⃣  Send a test email using sendmail
+9️⃣  Install Mailutils and test local delivery
+🔟  Set the maximum allowed email size
+1️⃣1️⃣  Define 'myhostname' in Postfix
+1️⃣2️⃣  Create required mail aliases
+1️⃣3️⃣  Configure IP protocols (IPv4 / IPv6)
+1️⃣4️⃣  Update Postfix without overwriting configuration
+"
+}
+
+
+# ------------------------------------------------------------------
+# 📘 Step 1 – Initializing the primary domain
+# ------------------------------------------------------------------
+msg_step1_title()  { echo “📘 Step 1 – Defining the primary domain”; }
+msg_step1_start()  { echo “🔧 Initializing the primary domain...”; }
+msg_step1_prompt="Primary domain name"
+msg_step1_ok="Primary domain defined"
+
+# ------------------------------------------------------------------
+# 🖋️ Step 2 – Adding the FQDN to the /etc/hosts file
+# ------------------------------------------------------------------
+msg_step2_title()  { echo “📘 Step 2 – Adding the FQDN to /etc/hosts”; }
+msg_step2_start()  { echo “🖋️ Adding the FQDN entry to the hosts file...”; }
+msg_step2_exists="Entry already present in /etc/hosts"
+msg_step2_added="Entry added"
+
+# ------------------------------------------------------------------
+# 🖥️ Step 3 – Checking the system hostname
+# ------------------------------------------------------------------
+
+msg_step3_title() { echo "📘 Step 3 - Verify system hostname"; }
+msg_step3_start() { echo "🔍 Verify and adjust hostname..."; }
+msg_step3_current="Current hostname"
+msg_step3_prompt="New hostname (leave empty to keep)"
+msg_step3_set="Host name updated"
+msg_step3_ok="Host name already correct"
+msg_step3_hostname_invalid="⚠️ The hostname entered contains invalid characters."
+msg_step3_hostname_allowed="❌ Only lowercase characters, digits, periods (.) and dashes (-) are allowed."
+msg_step3_hostname_kept="⏭️ Host name kept unchanged"
+
+
+# ------------------------------------------------------------------
+# 🌐 Step 4 – Checking DNS records
+# ------------------------------------------------------------------
+
+msg_step4_title()  { echo "📘 Step 4 – Checking DNS records"; }
+msg_step4_start()  { echo "🔍 Checking DNS..."; }
+
+msg_step4_dns_reminder="Add the following DNS records to your registrar"
+msg_step4_dns_examples="Examples of records"
+
+msg_step4_mx_example()     { echo "🔹 MX RECORD\n   @      300 IN MX 10 mail.${DOMAIN}"; }
+msg_step4_spf_example()    { echo "🔹 SPF RECORD\n   @      300 IN TXT \"v=spf1 mx -all\""; }
+msg_step4_dmarc_example()  { echo "🔹 DMARC RECORD\n   _dmarc 300 IN TXT \"v=DMARC1; p=none; rua=mailto:dmarc@${DOMAIN}; pct=100\""; }
+
+msg_step4_wait_user()  { echo "⏸️  Press [Enter] once you have added the DNS records to your registrar..."; }
+
+msg_step4_testing_dns="Checking DNS propagation..."
+
+msg_step4_mx_title="🔍 MX record for"
+msg_step4_spf_title="🔍 SPF record for"
+msg_step4_dmarc_title="🔍 DMARC record for"
+
+msg_step4_spf_missing="⚠️  No SPF record found."
+msg_step4_dmarc_missing="⚠️  No DMARC record found."
+
+msg_step4_continue="⏸️  Press [Enter] to continue..."
+msg_step4_success="✅ DNS records verified"
+
+
+# ------------------------------------------------------------------
+# 🧰 Step 5 – System update and Postfix installation
+# ------------------------------------------------------------------
+
+msg_step5_title()        { echo "📘 Step 5 – System update and Postfix installation"; }
+msg_step5_start()        { echo "🔧 Starting system update and Postfix installation..."; }
+msg_step5_update()       { echo "Updating packages..."; }
+msg_step5_config_info()  { echo "During installation, follow the on-screen instructions:"; }
+msg_step5_config_1()     { echo "   ➤ 1. Select: 'Internet Site'"; }
+msg_step5_config_2()     { echo "   ➤ 2. Enter your main domain name"; }
+msg_step5_installing()   { echo "Installing Postfix..."; }
+msg_step5_check_version() { echo "Postfix version installed:"; }
+msg_step5_check_port()   { echo "Checking that port 25 is listening:"; }
+msg_step5_port_warning() { echo "❌ Postfix does not appear to be listening on port 25."; }
+msg_step5_check_binaries() { echo "Postfix binaries found in /usr/sbin/:"; }
+msg_step5_success()      { echo "✅ Postfix successfully installed and verified."; }
+
+
+# ------------------------------------------------------------------
+# 🔥 Step 6 – Checking the firewall status
+# ------------------------------------------------------------------
+
+msg_step6_title()              { echo “🔥 Step 6 – Checking the firewall status (UFW)”; }
+msg_step6_success()            { echo “✅ Firewall checked (UFW)”; }
+
+# ------------------------------------------------------------------
+# 📘 Step 7 – Check outgoing connection to port 25 (SMTP)
+# ------------------------------------------------------------------
+
+msg_step7_title()          { echo "📘 Step 7 – Outgoing connection test to port 25 (SMTP)"; }
+msg_step7_start()          { echo "🔍 Checking if outbound port 25 is open (to smtp.gmail.com)"; }
+msg_step7_smtp_test()      { echo "Testing outbound connection to smtp.gmail.com on port 25..."; }
+msg_step7_explanation()    { echo "(This test checks if your ISP or host blocks outbound port 25)"; }
+msg_step7_telnet_missing() { echo "Telnet is not installed. Installing..."; }
+msg_step7_success()        { echo "✅ SMTP test completed"; }
+
+# ------------------------------------------------------------------
+# 📘 Step 8 – Sending a test email with Postfix (sendmail)
+# ------------------------------------------------------------------
+
+msg_step8_title()          { echo "📘 Step 8 – Sending a test email with Postfix (sendmail)"; }
+msg_step8_start()          { echo "🔍 Testing email sending using the sendmail command"; }
+msg_step8_test_sendmail()  { echo "Sending a test email using sendmail..."; }
+msg_step8_content()        { echo "Content: « test email »"; }
+msg_step8_dest()           { echo "Recipient"; }
+msg_step8_local_mailbox()  { echo "Local mailbox for each user"; }
+msg_step8_log_hint()       { echo "To check Postfix logs, consult:"; }
+msg_step8_verification_ok="Email successfully delivered (status=sent found in logs)."
+msg_step8_verification_fail="No status=sent found. Please check your configuration or the logs."
+msg_step8_success()        { echo "✅ Email sent successfully"; }
+
+
+# ------------------------------------------------------------------
+# 📘 Step 9 – Installing Mailutils and testing local sending
+# ------------------------------------------------------------------
+
+msg_step9_title()           { echo "📘 Step 9 – Mailutils installation and local email test"; }
+msg_step9_start()           { echo "📦 Installing mailutils and running local test..."; }
+msg_step9_installing="Installing mailutils (command-line email client)..."
+msg_step9_sending="Sending a local email using Mailutils..."
+msg_step9_subject_display="Email subject"
+msg_step9_mail_subject="✅ Chapter 1 Test"
+msg_step9_mail_body="✅ Postfix is working – Chapter 1 test\n\nHost: $(hostname)"
+msg_step9_ask_received="Did you receive the test email?"
+msg_step9_received="the email was successfully received ✅"
+msg_step9_not_received="the email was not received. We will check again at the end of the chapter."
+msg_step9_success()         { echo "✅ Mailutils test completed"; }
+
+# ------------------------------------------------------------------
+# 📘 Step 10 – Set the maximum email size (message_size_limit)
+# ------------------------------------------------------------------
+
+msg_step10_title()       { echo "📘 Step 10 – Set the maximum email size (message_size_limit)"; }
+msg_step10_start()       { echo "🔧 Configuring the maximum allowed email size..."; }
+msg_step10_current="Current allowed message size"
+msg_step10_box_limit="Current mailbox size limit (mailbox_size_limit)"
+msg_step10_warn_box="⚠️ WARNING: The message size exceeds the allowed mailbox size."
+msg_step10_confirm_apply="Do you still want to apply this value?"
+msg_step10_abort="Change aborted."
+msg_step10_ask_size="New maximum size for an email (in bytes)"
+msg_step10_applied="Maximum size updated"
+msg_step10_default="Value kept"
+msg_step10_success()     { echo "✅ Step 10 completed."; }
+
+# ------------------------------------------------------------------
+# 📘 Step 11 – Set myhostname in Postfix (recommended FQDN)
+# ------------------------------------------------------------------
+
+msg_step11_title()          { echo "📘 Step 11 – Set myhostname in Postfix (recommended FQDN)"; }
+msg_step11_current()        { echo "Current name (myhostname in Postfix)"; }
+msg_step11_prompt()         { echo "Enter the full FQDN hostname for the mail server (myhostname)"; }
+msg_step11_warn_apex()      { echo "Warning: you are using the root domain. This is not recommended."; }
+msg_step11_suggest_fqdn()   { echo "Use a subdomain FQDN like mail.domain.tld."; }
+msg_step11_applied()        { echo "FQDN successfully applied in the Postfix configuration"; }
+msg_step11_success()        { echo "✅ Step 11 completed."; }
+msg_step11_comment_header="👇 Declared in Chapter 1 script – Postfix configuration"
+
+# ------------------------------------------------------------------
+# 📘 Step 12 – Create required mail aliases (RFC 2142)
+# ------------------------------------------------------------------
+
+msg_step12_title()           { echo "📘 Step 12 – Create required mail aliases (RFC 2142)"; }
+msg_step12_prompt_alias()    { echo "Which user should receive system emails?"; }
+msg_step12_add_postmaster()  { echo "➕ Alias added: postmaster → root"; }
+msg_step12_root_modified()   { echo "✅ Alias modified: root →"; }
+msg_step12_no_change()       { echo "ℹ️ No custom alias provided. Root alias unchanged."; }
+msg_step12_newaliases()      { echo "✅ Alias table updated successfully."; }
+msg_step12_success()         { echo "✅ Step 12 completed."; }
+
+
+# ------------------------------------------------------------------
+# 📘 Step 13 – Configure IP protocols (IPv4 / IPv6)
+# ------------------------------------------------------------------
+
+msg_step13_title()         { echo "📘 Step 13 – Configure IP protocols (IPv4 / IPv6)"; }
+msg_step13_current()       { echo "Currently configured IP protocol(s) (inet_protocols)"; }
+msg_step13_explain()       { echo "Choose which IP protocols Postfix should use:"; }
+msg_step13_prompt_choice() { echo "Your choice (1=IPv4, 2=IPv6, 3=both)"; }
+msg_step13_keep_default="keep default"
+msg_step13_comment="IP protocol set by Chapter 1 script"
+msg_step13_set_ipv4="✅ inet_protocols set to ipv4"
+msg_step13_set_ipv6="✅ inet_protocols set to ipv6"
+msg_step13_set_all="✅ inet_protocols set to all"
+msg_step13_keep="ℹ️ No change made. Current value kept"
+msg_step13_restart="🔄 Restarting Postfix after inet_protocols change..."
+msg_step13_success()       { echo "✅ Step 13 completed."; }
+msg_press_enter_word="Enter"
+
+
+# ------------------------------------------------------------------
+# 📘 Step 14 – Postfix update (preserve configuration)
+# ------------------------------------------------------------------
+
+msg_step14_title()         { echo "📘 Step 14 – Postfix update (preserve configuration)"; }
+msg_step14_update_notice() { echo "Updating Postfix and available packages..."; }
+msg_step14_upgrade_tip1()  { echo "🧠 When prompted during the update, choose:"; }
+msg_step14_upgrade_tip2()  { echo "➤ ‘❌ None (No configuration)’ to keep your current files."; }
+msg_step14_success()       { echo "✅ Step 14 completed."; }
+
+# ------------------------------------------------------------------
+# 📘 Step 15 – Backup main.cf (non-destructive)
+# ------------------------------------------------------------------
+msg_step15_title() { echo "📘 Step 15 – Backup of main.cf (non-destructive copy)"; }
+msg_step15_success() { echo "✅ main.cf file successfully backed up."; }
+
+# ------------------------------------------------------------------
+# 📘 Step 16 – Restart Postfix
+# ------------------------------------------------------------------
+msg_step16_title() { echo "📘 Step 16 – Restarting the Postfix service"; }
+msg_step16_success() { echo "✅ Postfix restarted successfully."; }
+
+
+# ==========================================================
+# 🧹 Uninstall script – Chapter 1 (Basic Postfix)
+# 📦 Removing changes made in Chapter 1
+# ==========================================================
+msg_uninstall_intro="🧹 This script cleanly removes the configuration from Chapter 1."
+msg_uninstall_backup="Backing up files before removal..."
+msg_uninstall_clean_hosts="Cleaning 127.0.1.1 line from /etc/hosts..."
+msg_uninstall_clean_maincf="Cleaning main.cf (myhostname, inet_protocols, message_size_limit)..."
+msg_uninstall_clean_aliases="Removing aliases for postmaster: and root:..."
+msg_uninstall_ask_remove_postfix="Do you want to completely remove Postfix?"
+msg_prompt_yes_no_default="Yes/No (default: No)"
+msg_uninstall_removing="Removing Postfix..."
+msg_uninstall_removed="Postfix was successfully removed."
+msg_uninstall_not_installed="Postfix is not installed. Nothing to do."
+msg_uninstall_skipped="Postfix removal skipped."
+msg_uninstall_success="✅ End of Chapter 1 uninstall script"
+
+
+
+# ==================================================================
+#📘 Chapter 02 - Installing Postfix and Dovecot
+# ==================================================================
+
+# ------------------------------------------------------------------
+# 📘 Introduction and steps
+# ------------------------------------------------------------------
+
+msg_intro_chap2=“🎉 Welcome to the installation script for your secure email server with Postfix and Dovecot.”
+msg_steps_chap2="📜 This script will follow these steps:
+1. Check the status of **UFW** (firewall) and activate it if necessary.
+2. Open the ports needed for email management.
+3. Installing **Postfix** for outgoing email management (SMTP).
+4. Installing **Dovecot** for incoming email management (IMAP/POP3).
+5. Activating **TLS** encryption to secure communications.
+6. Testing to verify that the services are configured correctly."
+
+
+msg_banner_chap2=“###########################################\n💼 Postfix & Dovecot – Mail Server Setup 💼\n###########################################”
+
+# ------------------------------------------------------------------
+# 📘 Status messages for UFW and port opening
+# ------------------------------------------------------------------
+
+msg_active_ufw_chap2=“✅ UFW is already enabled.”
+msg_inactive_ufw_chap2="❌ UFW is not enabled on this server."
+msg_enable_ufw_chap2="Would you like to enable UFW to secure your server? (y/n)"
+msg_open_ports_chap2=“🌐 Opening the necessary ports in the firewall...”
+msg_open_ports_complete_chap2="✅ The ports have been successfully opened."
+
+# ------------------------------------------------------------------
+# 📘 Confirmation messages for installation and testing
+# ------------------------------------------------------------------
+msg_install_postfix_chap2=“🌐 Installing Postfix...”
+msg_install_dovecot_chap2="🌐 Installing Dovecot..."
+msg_test_email_chap2="🌐 Testing sending an email via Postfix. You will enter the **subject** and **description** of the email."
+msg_prompt_subject=“Please enter the subject of the email”
+msg_prompt_description="Please enter the description of the email"
+msg_test_imap_chap2="🌐 Testing the IMAP connection via Dovecot..."
+msg_restart_services_chap2="🌐 Restarting Postfix and Dovecot..."
+msg_success_chap2=“🎉 Mail server configuration completed successfully!”
+
+# ------------------------------------------------------------------
+# 📘 Messages to check the status of services
+# ------------------------------------------------------------------
+msg_config_test_postfix_chap2="🌐 Checking Postfix configuration..."
+msg_config_test_dovecot_chap2=“🌐 Checking Dovecot configuration...”
+
+# ------------------------------------------------------------------
+# 📘 New dynamic messages to add
+# ------------------------------------------------------------------
+msg_check_ufw_chap2="🌐 Checking UFW (firewall) status..."
+msg_postfix_config_chap2() { echo “Configuring Postfix with domain $DOMAIN...”; }
+msg_dovecot_maildir_config_chap2="Configuring Dovecot for Maildir..."
+msg_dovecot_tls_config_chap2="Configuring Dovecot for TLS..."
+
+# ============================================================
+# 📘 MESSAGES – Chapter 3: PostfixAdmin + Virtual Accounts
+# ============================================================
+
+msg_banner_chap3="📘 Chapter 3 – PostfixAdmin and Virtual Mailboxes"
+msg_intro_chap3=“📦 This script configures PostfixAdmin, virtual mailboxes, and the database for multi-domain management.”
+msg_steps_chap3="📜 Steps:
+1. Install MariaDB and create the database.
+2. Configure Postfix for virtual accounts.
+3. Configure Dovecot with SQL authentication.
+4. Install PostfixAdmin.
+5. Create a domain and a user."
+
+msg_install_mariadb_chap3="📦 Installing MariaDB..."
+msg_create_db_chap3="🗃️ Creating the database and tables..."
+msg_config_postfix_sql_chap3=“⚙️ Configuring Postfix SQL...”
+msg_config_dovecot_sql_chap3="⚙️ Configuring Dovecot SQL..."
+msg_install_postfixadmin_chap3="📦 Installing PostfixAdmin..."
+msg_add_domain_user_chap3=“➕ Adding the domain and an email account...”
+msg_success_chap3="🎉 Chapter 3 successfully completed!"
+
+# ============================================================
+# 📘 MESSAGES – Chapter 4: SPF & DKIM
+# ============================================================
+
+msg_banner_chap4=“📘 Chapter 4 – SPF & DKIM Configuration”
+msg_intro_chap4="🔐 This script configures SPF, installs OpenDKIM, and signs your emails automatically."
+msg_steps_chap4="📜 Steps:
+1. Create the SPF DNS entry.
+2. Install postfix-policyd-spf-python.
+3. Install OpenDKIM.
+4. Create public/private keys.
+5. Add signature tables.
+6. Test the DKIM signature."
+
+# (... add here all msg_stepX_chap4 used in the dkim script)
+
+msg_success_chap4=“🎉 SPF & DKIM successfully configured!”
+
+# ============================================================
+# 📘 Next chapters (placeholders to be filled in as you go)
+# ============================================================
+
+# msg_intro_chap5="..."
+# msg_steps_chap5="..."
+# msg_intro_chap6="..."
+# msg_intro_chap7="..."
+# ...

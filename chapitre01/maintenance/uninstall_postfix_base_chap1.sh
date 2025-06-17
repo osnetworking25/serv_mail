@@ -2,8 +2,8 @@
 # ==========================================================
 # 🧹 Script de désinstallation – Chapitre 1 (Postfix Basique)
 # 📦 Suppression des modifications effectuées par le chapitre 1
-# 🧾 Version : 1.0
-# 🧑💼 Auteur : pontarlier-informatique
+# 🧾 Version : 1.1
+# 🧑💼 Auteur : pontarlier-informatique – osnetworking
 # ==========================================================
 
 # ===================================================
@@ -29,6 +29,7 @@ else
   exit 1
 fi
 
+# === 🟦 Messages d'introduction ===
 msg_lang
 msg_uninstall_intro
 
@@ -38,34 +39,44 @@ MAIN_CF="/etc/postfix/main.cf"
 ALIASES_FILE="/etc/aliases"
 DATE_NOW=$(date +%F_%Hh%M)
 BACKUP_DIR="${SERV_ROOT}/backup_uninstall"
-
 mkdir -p "$BACKUP_DIR"
 
-# === 📦 Sauvegardes ===
+# === 💾 Sauvegardes ===
+echo -e "\n📁 $msg_uninstall_backup"
 cp -n "$MAIN_CF" "$BACKUP_DIR/main.cf.$DATE_NOW.bak"
 cp -n "$ALIASES_FILE" "$BACKUP_DIR/aliases.$DATE_NOW.bak"
 
-# === 🧽 Nettoyage fichier /etc/hosts ===
+# === 🧽 Nettoyage /etc/hosts ===
+echo -e "\n🧹 $msg_uninstall_clean_hosts"
 sed -i '/127\.0\.1\.1.*mail\./d' /etc/hosts
 
 # === 🧽 Nettoyage main.cf (myhostname, inet_protocols, message_size_limit)
+echo -e "🧹 $msg_uninstall_clean_maincf"
 sed -i '/^myhostname *=/d' "$MAIN_CF"
 sed -i '/^inet_protocols *=/d' "$MAIN_CF"
 sed -i '/^message_size_limit *=/d' "$MAIN_CF"
 
 # === 🧽 Nettoyage fichier aliases
+echo -e "🧹 $msg_uninstall_clean_aliases"
 sed -i '/^postmaster:/d' "$ALIASES_FILE"
 sed -i '/^root:/d' "$ALIASES_FILE"
 newaliases
 
-# === 🧼 Suppression Postfix si demandé
-read -rp "❓ $(msg_uninstall_ask_remove_postfix) (y/N): " REMOVE_POSTFIX
-if [[ "$REMOVE_POSTFIX" =~ ^[Yy]$ ]]; then
-  apt remove --purge -y postfix
-  apt autoremove --purge -y
-  echo "✅ Postfix $(msg_uninstall_removed)"
+# === ❓ Suppression conditionnelle de Postfix
+echo -e "\n❓ $msg_uninstall_ask_remove_postfix"
+read -rp "➡️ [$msg_prompt_yes_no_default] : " REMOVE_POSTFIX
+if [[ "$REMOVE_POSTFIX" =~ ^[YyOo]$ ]]; then
+  if dpkg -l | grep -q "^ii  postfix "; then
+    echo -e "\n📦 $msg_uninstall_removing"
+    apt remove --purge -y postfix
+    apt autoremove --purge -y
+    echo -e "✅ $msg_uninstall_removed"
+  else
+    echo -e "⏭️ $msg_uninstall_not_installed"
+  fi
 else
-  echo "⏭️ Postfix $(msg_uninstall_skipped)"
+  echo -e "⏭️ $msg_uninstall_skipped"
 fi
 
-msg_uninstall_success
+# === ✅ Fin
+echo -e "\n$msg_uninstall_success"

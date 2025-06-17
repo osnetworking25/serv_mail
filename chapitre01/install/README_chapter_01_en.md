@@ -1,141 +1,162 @@
-# 📘 Chapter 1 – Installation and Configuration of Postfix (Base)
+# 📘 Chapter 1 – Installing and Configuring Basic Postfix
 
-This script installs and configures **Postfix** for basic mail server functionality, following the **LinuxBabe** guide, with additional professional improvements for production use.
-
----
-
-## 🎯 Objective
-
-The goal of this chapter is to install and configure a **Postfix** server for handling outgoing emails (SMTP). The script will guide you through the initial setup, domain configuration, and ensure that the server is ready for secure mail communication.
+This chapter installs and configures **Postfix** to handle basic email sending on your server, following the **LinuxBabe** tutorial with professional improvements for production use.
 
 ---
 
-## ⚙️ Prerequisites
+## 🎯 Goal
 
-Before running the script, make sure you have the following:
+The goal is to set up a fully functional **Postfix SMTP server** with a **custom domain**, clean configuration, and proper maintenance tools.
 
-- A **valid domain name** (e.g., `example.com`).
-- **Ubuntu server** (ideally version 20.04 or higher).
-- **SSL/TLS certificate** (e.g., from **Let's Encrypt**).
-- **Sudo privileges** to execute installation commands.
+---
+
+## ⚙️ Requirements
+
+- A **valid domain name** (e.g., `example.com`)
+- A **Ubuntu server** (22.04 recommended)
+- A **TLS/SSL certificate** (Let's Encrypt or equivalent)
+- **Root or sudo privileges**
+- Correct DNS setup (A / MX / SPF / DKIM records recommended)
 
 ---
 
 ## 🧱 Directory Structure
 
-The script organizes files and directories as follows:
-
+```bash
 /opt/serv_mail/
 ├── chapitre_01
-│ ├── backup/ # Backup folder
-│ ├── documentation/ # Documentation files
-│ │ ├── README.md # Main README (in English)
-│ │ └── README_fr.md # README in French
-│ ├── export/ # Directory for exporting files
-│ ├── install/ # Installation scripts
-│ │ └── install_postfix_base_chap1.sh # Main installation script for Postfix
-│ ├── logs/ # Logs generated during installation
-│ ├── maintenance/ # Maintenance scripts
-│ │ └── uninstall_postfix_base_chap1.sh # Script for uninstallation
-│ ├── README.md # Documentation in English
-│ └── README_fr.md # Documentation in French
+│   ├── install/
+│   │   └── install_postfix_base_chap1.sh     # Installation script
+│   ├── backup/
+│   │   └── backup_postfix_base_chap1.sh      # Backup script
+│   ├── maintenance/
+│   │   └── uninstall_postfix_base_chap1.sh   # Uninstall script
+│   ├── logs/                                 # Logs from install and backup
+│   ├── export/                               # Exported files (DNS, keys, etc.)
+│   ├── documentation/
+│   │   ├── README_chapitre_01_fr.md
+│   │   └── README_chapitre_01_en.md
+│   └── README_fr.md / README.md              # Simplified doc
+```
 
----
 
-## 🚀 Running the Script
+## 🚀 Running the Installation Script
 
-### 1. 📁 Verify the location of the script
+## 1. 📁 Script Location
 
-The script should be placed in the `/opt/serv_mail/chapitre_01/` directory.
+Place install_postfix_base_chap1.sh in:
 
-### 2. ✅ Make it executable
+```bash
+/opt/serv_mail/chapitre_01/install/
+```
 
-Ensure the script is executable by running the following command:
+## 2. ✅ Make it Executable
 
 ```bash
 chmod +x install_postfix_base_chap1.sh
 ```
-###  3. ▶️ Run the script
 
-Once the script is executable, run it with the following command:
+## 3. ▶️ Run the Installation
 
 ```bash
 sudo ./install_postfix_base_chap1.sh
 ```
 
-The script will perform the following tasks:
+## 💾 Backup Script
 
-Configure the domain and hostname.
+After installing the mail server, run the backup script to save critical files:
 
-Add the Fully Qualified Domain Name (FQDN) to /etc/hosts.
+```bash
+sudo /opt/serv_mail/chapitre_01/backup/backup_postfix_base_chap1.sh
+```
 
-Verify DNS records (MX, SPF, DMARC).
+Files backed up include:
 
-Update the system and install Postfix.
+/etc/hosts
 
-Configure Postfix for secure mail communication.
+/etc/hostname
 
-###  4.🔍 Automated Steps
+/etc/resolv.conf
 
-The following steps are automated by the script:
+/etc/postfix/
 
-Domain Initialization: The script prompts for the main domain and configures it.
+/etc/mailname
 
-FQDN Setup: It adds the Fully Qualified Domain Name (FQDN) to /etc/hosts.
+/etc/aliases
 
-System Hostname Configuration: The script checks and configures the system hostname.
+Backups are saved in:
 
-DNS Record Check: It provides instructions for setting up DNS records (MX, SPF, DMARC).
+```bash
+/opt/serv_mail/chapitre_01/backup/<domain>/backup_mail_chap1_<date>.tar.gz
+```
 
-System Update: The system is updated, and Postfix is installed.
+# 🧹 Uninstall Script (Rollback / Cleanup)
 
-Postfix Configuration: Basic Postfix settings are applied.
+If needed (for testing, reset, reinstallation), run the uninstall script:
 
-Test: The script tests the email system by sending a test email via Postfix.
+```bash
+sudo /opt/serv_mail/chapitre_01/maintenance/uninstall_postfix_base_chap1.sh
+```
 
-###  5.🗂️ Generated Files
-The script generates or modifies the following files:
+Features:
 
-/etc/postfix/main.cf : Main configuration file for Postfix.
+Performs a pre-deletion backup
 
-/etc/aliases : Alias configuration file for Postfix.
+Cleans /etc/hosts, main.cf, and aliases
 
-🧩 Next Steps
-Once Chapter 1 is complete, you can:
+Offers optional Postfix removal
 
-Configure a mail client to send and receive emails via Postfix.
+Fully multilingual and interactive
 
-Set up additional mail management tools, such as PostfixAdmin, to manage users and aliases.
+## 🗂️ Files Modified
 
-Proceed to Chapter 2 to install and configure Dovecot and secure the server with TLS encryption.
+/etc/postfix/main.cf
 
-###  6.🧑💼 Authors
-Author: pontarlier-informatique
+/etc/aliases
+
+/etc/hosts
+
+/etc/hostname
+
+/etc/resolv.conf
+
+## 🔐 Next Steps
+
+Test sending email via Postfix (mail or sendmail)
+
+Install Dovecot (Chapter 2) for receiving emails
+
+Secure your mail setup with SPF, DKIM, DMARC (Chapter 4)
+
+Add a mail admin UI like PostfixAdmin (Chapter 3)
+
+## 🧑‍💼 Author
+
+pontarlier-informatique
 
 Project: Osnetworking
 
-Date: 14/06/2025
+Last updated: 2025-06-17
 
-###  7.🌐 Reference
+Based on LinuxBabe, fully adapted with logs, structure, and maintenance scripts
+
+##  🌐 References
 Osnetworking Guide – Chapter 1
 
 
----
 
-### Explication des sections :
 
-1. **Objective** : Cette section explique clairement l'objectif du **Chapitre 1**, qui est d'installer **Postfix** pour la gestion des emails sortants.
-2. **Prerequisites** : Liste les prérequis nécessaires pour exécuter le script, comme un serveur Ubuntu, un domaine valide, et un certificat SSL/TLS.
-3. **Directory Structure** : Présente la structure des répertoires et des fichiers générés par le script.
-4. **Running the Script** : Guide l'utilisateur sur la manière de rendre le script exécutable et de le lancer.
-5. **Automated Steps** : Détaille les étapes que le script exécute automatiquement, telles que la configuration du domaine, l'ajout du FQDN, la configuration de **Postfix**, etc.
-6. **Generated Files** : Liste des fichiers modifiés ou générés par le script, comme **main.cf** et **aliases**.
-7. **Next Steps** : Explique ce que l'utilisateur doit faire une fois le script terminé, comme configurer un client de messagerie ou passer au **Chapitre 2**.
-8. **Authors** : Détails sur l'auteur du projet.
-9. **Reference** : Inclut une référence au **Chapitre 1** du guide d'Osnetworking, s'il est disponible.
 
----
 
-### Conclusion :
 
-Avec cette **version anglaise du README.md**, tu disposes d'un guide complet pour **Chapitre 1**, expliquant ce que le script fait, comment l'exécuter, et où il place les fichiers générés. Si tu souhaites ajouter des sections ou apporter des modifications supplémentaires, n'hésite pas à me le dire ! 😊
+
+
+
+
+
+
+
+
+
+
+

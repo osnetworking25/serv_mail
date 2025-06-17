@@ -8,18 +8,19 @@ Ce script permet de supprimer proprement la configuration initiale de Postfix r�
 
 Le script `uninstall_postfix_base_chap1.sh` réalise les actions suivantes :
 
-1. ✅ Vérifie que Postfix est installé
-2. ❌ Supprime Postfix et ses dépendances
-3. 🗑️ Supprime les fichiers de configuration créés
-4. 📁 Vide les répertoires de logs et de sauvegarde créés dans le chapitre
-5. 🔐 Réinitialise les permissions éventuellement modifiées
+1. ✅ Vérifie que Postfix est installé (et propose sa suppression)
+2. 💾 Sauvegarde les fichiers de configuration `main.cf` et `aliases`
+3. 🗑️ Nettoie les fichiers `/etc/hosts`, `main.cf` et `aliases`
+4. 📁 Conserve les répertoires `logs/` et `backup/` créés lors du chapitre 1
+5. ⚠️ Ne modifie pas les permissions système ni les fichiers en dehors de ceux explicitement listés
 
 ---
 
 ## 🚨 Précautions
 
-- Ce script est irréversible. Sauvegardez les fichiers si besoin avant de l’exécuter.
-- Les mails stockés localement seront supprimés.
+- Ce script est **destructif** : il supprime ou nettoie certains fichiers de configuration système.
+- Les mails stockés localement peuvent être perdus si Postfix est supprimé.
+- Les sauvegardes précédemment effectuées dans `/opt/serv_mail/chapitre_01/backup/` et les logs dans `/logs/` **ne sont pas supprimés automatiquement**.
 - À utiliser uniquement dans un environnement de test ou avant une réinstallation complète.
 
 ---
@@ -27,8 +28,14 @@ Le script `uninstall_postfix_base_chap1.sh` réalise les actions suivantes :
 ## ▶️ Lancer le script
 
 ```bash
-sudo bash uninstall_postfix_base_chap1.sh
+sudo bash /opt/serv_mail/chapitre_01/maintenance/uninstall_postfix_base_chap1.sh
+
 ```
+Vous serez invité à :
+
+Sélectionner votre langue (Français ou English)
+
+Confirmer la suppression de Postfix si celui-ci est installé
 
 ## ⚠️ Attention
 Ce script est **destructif** et ne doit être utilisé que si vous avez l'intention de revenir complètement sur le chapitre 1.
@@ -41,6 +48,10 @@ sudo bash /opt/serv_mail/chapitre_01/maintenance/uninstall_chapitre1.sh
 
 ## 📘 Support linguistique
 Prise en charge multilingue via `/opt/serv_mail/lang/fr.sh` and `en.sh`. Les invites et les messages s'affichent en fonction de la langue sélectionnée.
+
+/opt/serv_mail/lang/fr.sh
+/opt/serv_mail/lang/en.sh
+
 
 ## 🧑 Autheur
 pontarlier-informatique – osnetworking

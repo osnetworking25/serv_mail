@@ -29,32 +29,34 @@ else
   exit 1
 fi
 
-msg_lang
-msg_banner
-msg_intro
-echo -e "\n"
+# 🖥️ Affichage intro
+echo -e "\n$msg_lang"
+echo -e "$(msg_banner_chap1)"
+echo -e "$(msg_intro_chap1)"
+echo -e "\n$(msg_steps_chap1)\n"
+echo -e "$(msg_steps_chap1_list)"
 
-# === 🔧 Variables dynamiques principales ===
+
+# === 🔧 Variables dynamiques ===
 
 while [[ -z "$DOMAIN" ]]; do
-  read -rp "🌐 $(msg_prompt_domain) : " DOMAIN
+  read -rp "🌐 $msg_prompt_domain : " DOMAIN
 done
 
 while [[ -z "$MAIL_FROM" ]]; do
-  read -rp "📧 $(msg_prompt_mail_from) (ex: contact@${DOMAIN}) : " MAIL_FROM
+  read -rp "📧 $msg_prompt_mail_from (ex: contact@${DOMAIN}) : " MAIL_FROM
 done
 
 while [[ -z "$MAIL_DEST" ]]; do
-  read -rp "📨 $(msg_prompt_mail_dest) : " MAIL_DEST
+  read -rp "📨 $msg_prompt_mail_dest : " MAIL_DEST
 done
 
-while [[ -z "$MAIL_SERVER_FQDN" ]]; do
-  read -rp "🌐 $(msg_prompt_mail_fqdn) (ex: mail.${DOMAIN}) : " MAIL_SERVER_FQDN
-done
+read -rp "🌐 $msg_prompt_mail_fqdn (ex: mail.${DOMAIN}) : " MAIL_SERVER_FQDN
+MAIL_SERVER_FQDN="${MAIL_SERVER_FQDN:-mail.${DOMAIN}}"  # Valeur par défaut si vide
 
 echo -e "\n"
 
-# === 📁 Arborescence projet (Chapitre 1) ===
+# === 📁 Variables interne (automatique) ===
 SERV_ROOT="/opt/serv_mail/chapitre_01"
 LOGS_DIR="${SERV_ROOT}/logs"
 BACKUP_DIR="${SERV_ROOT}/backup/${DOMAIN}"
@@ -69,13 +71,8 @@ ALIASES_FILE="/etc/aliases"
 # 📘 Étape 1 – Initialisation du domaine principal
 # ------------------------------------------------------------------
 
-msg_step1_title
-msg_step1_start
-
-# 🌐 Demander le nom de domaine principal (ex: domain.tld)
-while [[ -z "$DOMAIN" ]]; do
-  read -rp "🌐 $(msg_step1_prompt) : " DOMAIN
-done
+echo -e "$(msg_step1_title)"
+echo -e "$(msg_step1_start)"
 
 # 🔁 Afficher la valeur retenue
 echo -e "✅ $(msg_step1_ok) : $DOMAIN"
@@ -84,11 +81,11 @@ echo -e "✅ $(msg_step1_ok) : $DOMAIN"
 # 🖋️ Étape 2 – Ajout du FQDN dans le fichier /etc/hosts
 # ------------------------------------------------------------------
 
-msg_step2_title
-msg_step2_start
+echo -e "$(msg_step2_title)"
+echo -e "$(msg_step2_start)"
 
-# 🧠 Construction du FQDN
-MAIL_SERVER_FQDN="mail.${DOMAIN}"
+# 🧠 Construction du FQDN si absent
+MAIL_SERVER_FQDN="${MAIL_SERVER_FQDN:-mail.${DOMAIN}}"
 
 # 🔍 Vérifier si l'entrée existe déjà
 if grep -q "127.0.1.1[[:space:]]\+${MAIL_SERVER_FQDN}" /etc/hosts; then
@@ -106,8 +103,8 @@ fi
 # 🖥️ Étape 3 – Vérification du hostname système
 # ------------------------------------------------------------------
 
-msg_step3_title
-msg_step3_start
+echo -e "$(msg_step3_title)"
+echo -e "$(msg_step3_start)"
 
 CURRENT_HOSTNAME=$(hostnamectl --static)
 echo -e "\n🔍 $(msg_step3_current): $CURRENT_HOSTNAME"
@@ -115,64 +112,70 @@ echo -e "\n🔍 $(msg_step3_current): $CURRENT_HOSTNAME"
 read -rp "➡️ $(msg_step3_prompt) [$MAIL_SERVER_FQDN] : " NEW_HOSTNAME
 NEW_HOSTNAME=${NEW_HOSTNAME:-$MAIL_SERVER_FQDN}
 
-if [[ "$CURRENT_HOSTNAME" != "$NEW_HOSTNAME" ]]; then
-  hostnamectl set-hostname "$NEW_HOSTNAME"
-  echo -e "✅ $(msg_step3_set): $NEW_HOSTNAME"
-
-  # 📝 Log facultatif (utile en entreprise ou environnement de déploiement)
-  echo "[$DATE_NOW] hostnamectl set-hostname $NEW_HOSTNAME (ancien: $CURRENT_HOSTNAME)" >> "$LOGS_DIR/hostname.log"
-
+# 🔐 Vérification du format du hostname
+if [[ ! "$NEW_HOSTNAME" =~ ^[a-z0-9.-]+$ ]]; then
+  echo -e "\n$(msg_step3_hostname_invalid)"
+  echo -e "$(msg_step3_hostname_allowed)"
+  echo -e "$(msg_step3_hostname_kept): $CURRENT_HOSTNAME"
 else
-  echo -e "✅ $(msg_step3_ok): $CURRENT_HOSTNAME"
+  if [[ "$CURRENT_HOSTNAME" != "$NEW_HOSTNAME" ]]; then
+    hostnamectl set-hostname "$NEW_HOSTNAME"
+    echo -e "✅ $(msg_step3_set): $NEW_HOSTNAME"
+
+    # 📝 Log
+    echo "[$DATE_NOW] hostnamectl set-hostname $NEW_HOSTNAME (ancien: $CURRENT_HOSTNAME)" >> "$LOGS_DIR/hostname.log"
+  else
+    echo -e "✅ $(msg_step3_ok): $CURRENT_HOSTNAME"
+  fi
 fi
 
 # ------------------------------------------------------------------
 # 🌐 Étape 4 – Vérification des enregistrements DNS
 # ------------------------------------------------------------------
 
-msg_step4_title
-msg_step4_start
+echo -e "$(msg_step4_title)"
+echo -e "$(msg_step4_start)"
 
 # 🔎 Rappel des enregistrements à créer chez votre registrar
 echo -e "\n🌐 $(msg_step4_dns_reminder):"
 echo -e "\n🧾 $(msg_step4_dns_examples):\n"
 
 echo -e "🔹 MX RECORD"
-echo -e "   @      300 IN MX 10 mail.${DOMAIN}"
+echo -e "$(msg_step4_mx_example)"
 
 echo -e "\n🔹 SPF RECORD"
-echo -e "   @      300 IN TXT \"v=spf1 mx -all\""
+echo -e "\n$(msg_step4_spf_example)"
 
 echo -e "\n🔹 DMARC RECORD"
-echo -e "   _dmarc 300 IN TXT \"v=DMARC1; p=none; rua=mailto:dmarc@${DOMAIN}; pct=100\"\n"
+echo -e "\n$(msg_step4_dmarc_example)\n"
 
 # ⏸️ Pause pour que l'utilisateur configure ses enregistrements DNS
-read -rp "⏸️  Appuyez sur [Entrée] une fois les DNS ajoutés chez votre registrar... " _
+read -rp "$(msg_step4_wait_user) " _
 
 # 🧪 Tests de propagation DNS
 echo -e "\n🧪 $(msg_step4_testing_dns)"
 
-echo -e "\n🔍 Champ MX pour ${DOMAIN} :"
+echo -e "\n$(msg_step4_mx_title) ${DOMAIN} :"
 dig +short MX "${DOMAIN}"
 
-echo -e "\n🔍 Champ SPF pour ${DOMAIN} :"
-dig +short TXT "${DOMAIN}" | grep spf || echo "⚠️  Aucun SPF trouvé."
+echo -e "\n$(msg_step4_spf_title) ${DOMAIN} :"
+dig +short TXT "${DOMAIN}" | grep spf || echo "$(msg_step4_spf_missing)"
 
-echo -e "\n🔍 Champ DMARC pour ${DOMAIN} :"
-dig +short TXT "_dmarc.${DOMAIN}" || echo "⚠️  Aucun enregistrement DMARC trouvé."
+echo -e "\n$(msg_step4_dmarc_title) ${DOMAIN} :"
+dig +short TXT "_dmarc.${DOMAIN}" || echo "$(msg_step4_dmarc_missing)"
 
 # Pause finale
-read -rp "⏸️  Appuyez sur [Entrée] pour continuer..." _
+read -rp "$(msg_step4_continue)" _
 
-msg_step4_success
+echo -e "\n$(msg_step4_success)"
 
 
 # ------------------------------------------------------------------
 # 🧰 Étape 5 – Mise à jour du système - installation postfix
 # ------------------------------------------------------------------
 
-msg_step5_title
-msg_step5_start
+echo -e "$(msg_step5_title)"
+echo -e "$(msg_step5_start)"
 
 # 🔄 Mise à jour des paquets
 echo -e "\n🔄 $(msg_step5_update)"
@@ -180,52 +183,78 @@ apt update
 
 # ℹ️ Instructions d'installation interactive
 echo -e "\n🛠️ $(msg_step5_config_info)"
-echo -e "   ➤ 1. Sélectionnez : « Site Internet »"
-echo -e "   ➤ 2. Entrez votre domaine principal : ${DOMAIN}"
+echo -e "$(msg_step5_config_1)"
+echo -e "$(msg_step5_config_2): ${DOMAIN}"
 
 # 📦 Installation de Postfix
 echo -e "\n📦 $(msg_step5_installing)"
 apt install -y postfix
 
 # 🧾 Vérification de la version de Postfix
-echo -e "\n📦 $(msg_step5_check_version):"
+echo -e "\n📦 $(msg_step5_check_version)"
 postconf mail_version
 
 # 🔌 Vérification que le port 25 est ouvert
-echo -e "\n🔌 $(msg_step5_check_port):"
-ss -lnpt | grep master || echo "❌ Postfix ne semble pas écouter sur le port 25."
+echo -e "\n🔌 $(msg_step5_check_port)"
+ss -lnpt | grep master || echo "$(msg_step5_port_warning)"
 
 # 📁 Liste des binaires Postfix
-echo -e "\n📁 $(msg_step5_check_binaries):"
+echo -e "\n📁 $(msg_step5_check_binaries)"
 dpkg -L postfix | grep /usr/sbin/
 
-msg_step5_success
+echo -e "\n$(msg_step5_success)"
 
 # ------------------------------------------------------------------
-# 🔥 Étape 6 – Vérification de l’état du pare-feu
+# 🔥 Étape 6 – Vérification de l’état du pare-feu UFW
 # ------------------------------------------------------------------
 
-msg_step6_title
-msg_step6_start
+echo -e "\n$(msg_step6_title)"
+echo -e "$(msg_step6_start)"
 
-# Vérifie si ufw est installé
-if command -v ufw >/dev/null; then
-  echo -e "\n🔎 ufw status:"
-  ufw status verbose
+# Vérifie si UFW est installé
+if ! command -v ufw >/dev/null 2>&1; then
+  echo -e "⚠️  $(msg_ufw_not_installed)"
 else
-  echo -e "⚠️  UFW n’est pas installé. Aucun pare-feu UFW actif."
+  echo -e "\n🔍 ufw status:"
+  ufw status verbose
+
+  # Vérifie si UFW est activé
+  if ufw status | grep -q "Status: active"; then
+    echo -e "\n$(msg_active_ufw)"
+    read -rp "➡️  $(msg_ufw_keep_enabled) " UFW_KEEP
+    if [[ "$UFW_KEEP" =~ ^[Nn]$ ]]; then
+      echo -e "$(msg_ufw_disabling)"
+      ufw disable
+      echo -e "$(msg_ufw_disabled)"
+    fi
+  else
+    echo -e "\n$(msg_inactive_ufw)"
+    read -rp "➡️  $(msg_enable_ufw) " ENABLE_UFW
+    if [[ "$ENABLE_UFW" =~ ^[OoYy]$ ]]; then
+      echo -e "\n$(msg_open_ports)"
+      ufw allow OpenSSH
+      ufw allow 25/tcp
+      ufw allow 587/tcp
+      ufw allow 465/tcp
+      ufw --force enable
+      echo -e "\n$(msg_open_ports_complete_chap2)"
+    else
+      echo -e "$(msg_ufw_left_disabled)"
+    fi
+  fi
 fi
 
-# Pause informative
-read -rp "⏸️  $(msg_step5_confirm_continue) [Entrée] " _
-msg_step6_success
+# Pause finale
+read -rp "$(msg_press_enter)" _
+echo -e "$(msg_step6_success)"
+
 
 # ------------------------------------------------------------------
 # 📘 Étape 7 – Test de connexion sortante vers port 25 (SMTP)
 # ------------------------------------------------------------------
 
-sg_step7_title
-msg_step7_start
+echo -e "$(msg_step7_title)"
+echo -e "$(msg_step7_start)"
 
 # 🔎 Test de connexion sortante vers Gmail
 echo -e "\n📤 $(msg_step7_smtp_test)"
@@ -240,97 +269,119 @@ fi
 # Lancer le test
 telnet smtp.gmail.com 25
 
-msg_step7_success
+# ✅ Message final
+echo -e "$(msg_step7_success)"
 
 
 # ------------------------------------------------------------------
 # 📘 Étape 8 – Envoi d’un e-mail de test avec Postfix (sendmail)
 # ------------------------------------------------------------------
 
-msg_step8_title
-msg_step8_start
+echo -e "$(msg_step8_title)"
+echo -e "$(msg_step8_start)"
 
 # 📤 Envoi d’un e-mail de test avec sendmail
 echo -e "\n📤 $(msg_step8_test_sendmail)"
 echo "📝 $(msg_step8_content)"
 echo -e "\n➡️ $(msg_step8_dest): $MAIL_DEST"
 
+# Envoi réel
 echo "test email" | sendmail "$MAIL_DEST"
 
-# 📁 Vérification de la boîte aux lettres locale
+# ⏳ Petite pause pour laisser le temps au log de s’écrire
+sleep 2
+
+# 📂 Vérification de la boîte aux lettres locale
 MAILBOX_DIR=$(postconf -h mail_spool_directory)
 echo -e "\n📂 $(msg_step8_local_mailbox): $MAILBOX_DIR"
 ls -l "$MAILBOX_DIR"
 
-# 📁 Rappel emplacement logs
+# 📁 Vérification des logs postfix
 echo -e "\n📝 $(msg_step8_log_hint)"
-echo "   ➤ /var/log/mail.log"
+tail -n 20 /var/log/mail.log | grep "$MAIL_DEST" | grep -i 'status='
 
-msg_step8_success
+# ✅ Vérification automatique du succès
+if grep "$MAIL_DEST" /var/log/mail.log | grep -qi 'status=sent'; then
+  echo -e "\n✅ $(msg_step8_verification_ok)"
+else
+  echo -e "\n❌ $(msg_step8_verification_fail)"
+fi
+
+# Pause finale
+read -rp "$(msg_press_enter)" _
+
+echo -e "$(msg_step8_success)"
 
 # ------------------------------------------------------------------
 # 📘 Étape 9 – Installation de Mailutils et test d’envoi local
 # ------------------------------------------------------------------
-msg_step9_title
-msg_step9_start
+
+echo -e "$(msg_step9_title)"
+echo -e "$(msg_step9_start)"
 
 # 📦 Installation de Mailutils (MUA en ligne de commande)
-echo -e "\n📦 Installation de mailutils (agent utilisateur de messagerie)..."
+echo -e "\n📦 $(msg_step9_installing)"
 apt install -y mailutils &>/dev/null
 
 # 📤 Envoi d’un e-mail local avec Postfix
-echo -e "\n📤 Envoi d’un e-mail local (Postfix via mailutils)..."
-echo -e "✅ Postfix OK – test Chapitre 1\n\n$(hostname)" | mail -s "✅ Test Chapitre 1" "$MAIL_DEST" -- -f "$MAIL_FROM"
+echo -e "\n📤 $(msg_step9_sending)"
+echo -e "➡️  $MAIL_DEST"
+echo -e "✉️  $(msg_step9_subject_display): $msg_step9_mail_subject"
+
+echo -e "$msg_step9_mail_body" | mail -s "$msg_step9_mail_subject" "$MAIL_DEST" -- -f "$MAIL_FROM"
 
 # 📥 Vérification réception
 read -rp "📬 $(msg_step9_ask_received) (y/N) : " RECEIVED
 if [[ "$RECEIVED" =~ ^[Yy]$ ]]; then
-  echo "✅ OK : le mail a bien été reçu ✅"
+  echo "✅ OK : $(msg_step9_received)"
 else
-  echo "⚠️ Le mail ne semble pas reçu. Nous vérifierons à la fin du chapitre."
+  echo "⚠️ $(msg_step9_not_received)"
 fi
 
-msg_step9_success
+echo -e "$(msg_step9_success)"
 
 
 # ------------------------------------------------------------------
 # 📘 Étape 10 – Définir la taille maximale des e-mails (message_size_limit)
 # ------------------------------------------------------------------
 
-msg_step10_title
-msg_step10_start
+echo -e "$(msg_step10_title)"
+echo -e "$(msg_step10_start)"
 
 # 📏 Récupération des valeurs actuelles
 CURRENT_MSG_LIMIT=$(postconf -h message_size_limit)
 CURRENT_BOX_LIMIT=$(postconf -h mailbox_size_limit)
 
-echo -e "\n📏 $(msg_step10_current): $CURRENT_MSG_LIMIT octets"
-echo -e "📥 $(msg_step10_box_limit): $CURRENT_BOX_LIMIT octets"
+# 📏 Affichage lisible (en octets + Mo)
+echo -e "\n📏 $(msg_step10_current): $CURRENT_MSG_LIMIT octets ($(($CURRENT_MSG_LIMIT / 1048576)) Mo)"
+echo -e "📥 $(msg_step10_box_limit): $CURRENT_BOX_LIMIT octets ($(($CURRENT_BOX_LIMIT / 1048576)) Mo)"
 
 # 🧠 Demande d’une nouvelle valeur
 read -rp "📏 $(msg_step10_ask_size) (ex: 52428800 pour 50 Mo) [Entrée=inchangé] : " SIZE_LIMIT
 
 if [[ -n "$SIZE_LIMIT" ]]; then
   if [[ "$CURRENT_BOX_LIMIT" -ne 0 && "$SIZE_LIMIT" -gt "$CURRENT_BOX_LIMIT" ]]; then
-    echo -e "\n⚠️ $(msg_step10_warn_box)"
+    echo -e "\n$(msg_step10_warn_box)"
     read -rp "❓ $(msg_step10_confirm_apply) (y/N) : " CONFIRM
     [[ "$CONFIRM" != [Yy] ]] && echo "❌ $(msg_step10_abort)" && exit 1
   fi
   postconf -e "message_size_limit = $SIZE_LIMIT"
-  echo "✅ $(msg_step10_applied) : $SIZE_LIMIT octets"
+  echo -e "✅ $(msg_step10_applied): $SIZE_LIMIT octets"
 else
-  echo "ℹ️ $(msg_step10_default) : $CURRENT_MSG_LIMIT"
+  echo -e "ℹ️ $(msg_step10_default): $CURRENT_MSG_LIMIT"
 fi
 
 # 🔄 Rechargement Postfix
 systemctl restart postfix && echo "🔄 Postfix redémarré."
 
-msg_step10_success
+echo -e "$(msg_step10_success)"
+
 
 # ------------------------------------------------------------------
-# 📘 Étape 11 – Définir myhostname dans Postfix (FQDN recommandé))
+# 📘 Étape 11 – Définir myhostname dans Postfix (FQDN recommandé)
 # ------------------------------------------------------------------
-msg_step11_title
+
+echo -e "$(msg_step11_title)"
 
 # 💡 Suggestion : utiliser un FQDN de type mail.domain.tld
 SUGGESTED_HOSTNAME="mail.${DOMAIN}"
@@ -352,17 +403,19 @@ fi
 # 🛠️ Mise à jour dans le fichier main.cf (avec sauvegarde préalable)
 cp "$MAIN_CF" "$MAIN_CF.bak"
 sed -i '/^myhostname *=/d' "$MAIN_CF"
-echo -e "\n# 👇 Déclaré dans le script Chapitre 1 – Configuration Postfix\nmyhostname = $NEW_MYHOSTNAME" >> "$MAIN_CF"
+echo -e "\n# $(msg_step11_comment_header)\nmyhostname = $NEW_MYHOSTNAME" >> "$MAIN_CF"
 
 echo -e "✅ $(msg_step11_applied): $NEW_MYHOSTNAME"
 
-msg_step11_success
+echo -e "$(msg_step11_success)"
+
+
 
 # ------------------------------------------------------------------
 # 📘 Étape 12 – Création des alias mail requis (RFC 2142)
 # ------------------------------------------------------------------
 
-msg_step12_title
+echo -e "$(msg_step12_title)"
 
 # 🔒 Sauvegarde préalable
 cp "$ALIASES_FILE" "${ALIASES_FILE}.bak"
@@ -370,28 +423,29 @@ cp "$ALIASES_FILE" "${ALIASES_FILE}.bak"
 # ✅ postmaster → root (si absent)
 if ! grep -q "^postmaster:" "$ALIASES_FILE"; then
   echo "postmaster: root" >> "$ALIASES_FILE"
-  echo "➕ Alias ajouté : postmaster → root"
+  echo -e "$(msg_step12_add_postmaster)"
 fi
 
 # 👤 root → utilisateur réel (non-root recommandé)
 read -rp "👤 $(msg_step12_prompt_alias) (ex: serv2025) : " ALIAS_USER
 if [[ -n "$ALIAS_USER" ]]; then
   sed -i "s/^root:.*/root: ${ALIAS_USER}/" "$ALIASES_FILE"
-  echo "✅ Alias modifié : root → ${ALIAS_USER}"
+  echo -e "$(msg_step12_root_modified) ${ALIAS_USER}"
 else
-  echo "ℹ️ Aucun alias personnalisé fourni. L’alias root reste inchangé."
+  echo -e "$(msg_step12_no_change)"
 fi
 
 # 🔃 Génération de la table des alias
-newaliases && echo "✅ Table des alias mise à jour avec succès."
+newaliases && echo -e "$(msg_step12_newaliases)"
 
-msg_step12_success
+echo -e "$(msg_step12_success)"
+
 
 # ------------------------------------------------------------------
 # 📘 Étape 13 – Configuration des protocoles IP (IPv4 / IPv6)
 # ------------------------------------------------------------------
 
-msg_step13_title
+echo -e "$(msg_step13_title)"
 
 # 🔍 Affichage de la valeur actuelle
 CURRENT_PROTO=$(postconf -h inet_protocols)
@@ -402,27 +456,30 @@ echo -e "\n🌐 $(msg_step13_explain)"
 echo -e "   1) IPv4 uniquement"
 echo -e "   2) IPv6 uniquement"
 echo -e "   3) IPv4 + IPv6 (valeur par défaut)"
-read -rp "➡️  $(msg_step13_prompt_choice) [Entrée=laisser par défaut] : " PROTO_CHOICE
+read -rp "➡️  $(msg_step13_prompt_choice) [$(msg_press_enter_word)=$(msg_step13_keep_default)] : " PROTO_CHOICE
 
 # 🔧 Application du choix
 case "$PROTO_CHOICE" in
   1)
     sed -i '/^inet_protocols *=/d' "$MAIN_CF"
-    echo -e "\n# 🖧 Protocole IP défini par script Chapitre 1\ninet_protocols = ipv4" >> "$MAIN_CF"
-    echo "✅ inet_protocols défini sur ipv4"
+    echo -e "\n# 🖧 $(msg_step13_comment)" >> "$MAIN_CF"
+    echo "inet_protocols = ipv4" >> "$MAIN_CF"
+    echo "$(msg_step13_set_ipv4)"
     ;;
   2)
     sed -i '/^inet_protocols *=/d' "$MAIN_CF"
-    echo -e "\n# 🖧 Protocole IP défini par script Chapitre 1\ninet_protocols = ipv6" >> "$MAIN_CF"
-    echo "✅ inet_protocols défini sur ipv6"
+    echo -e "\n# 🖧 $(msg_step13_comment)" >> "$MAIN_CF"
+    echo "inet_protocols = ipv6" >> "$MAIN_CF"
+    echo "$(msg_step13_set_ipv6)"
     ;;
   3)
     sed -i '/^inet_protocols *=/d' "$MAIN_CF"
-    echo -e "\n# 🖧 Protocole IP défini par script Chapitre 1\ninet_protocols = all" >> "$MAIN_CF"
-    echo "✅ inet_protocols défini sur all"
+    echo -e "\n# 🖧 $(msg_step13_comment)" >> "$MAIN_CF"
+    echo "inet_protocols = all" >> "$MAIN_CF"
+    echo "$(msg_step13_set_all)"
     ;;
   *)
-    echo "ℹ️ Aucun changement effectué. Valeur actuelle conservée : $CURRENT_PROTO"
+    echo "$(msg_step13_keep): $CURRENT_PROTO"
     ;;
 esac
 
@@ -433,57 +490,34 @@ systemctl restart postfix
 # 📊 Vérification de l’état
 systemctl status postfix --no-pager | grep -E "Active|Loaded"
 
-msg_step13_success
+echo -e "$(msg_step13_success)"
+
 
 # ------------------------------------------------------------------
 # 📘 Étape 14 – Mise à jour de Postfix (préserver la configuration)
 # ------------------------------------------------------------------
 
-msg_step14_title
-
 echo -e "\n📦 $(msg_step14_update_notice)"
-echo -e "   🧠 Lorsque la mise à jour vous propose de choisir une configuration, sélectionnez :"
-echo -e "   ➤ « ❌ Aucun (No configuration) » pour préserver vos fichiers actuels."
+echo -e "   $(msg_step14_upgrade_tip1)"
+echo -e "   $(msg_step14_upgrade_tip2)"
 
-# 🆙 Mise à jour système (Postfix inclus si besoin)
 apt update && apt upgrade -y
 
-msg_step14_success
-
-
+echo -e "$(msg_step14_success)"
 
 
 # ------------------------------------------------------------------
-# 📘 Étape 14 – Sauvegarde main.cf (non destructif)
+# 📘 Étape 15 – Sauvegarde main.cf (non destructif)
 # ------------------------------------------------------------------
-msg_step13_title
+echo -e "$(msg_step15_title)"
 cp "$MAIN_CF" "${BACKUP_DIR}/main.cf.orig_${DATE_NOW}"
-
-
-
+echo -e "$(msg_step15_success)"
 
 
 # ------------------------------------------------------------------
 # 📘 Étape 16 – Redémarrage Postfix
 # ------------------------------------------------------------------
-msg_step16_title
+echo -e "$(msg_step16_title)"
 systemctl restart postfix
 systemctl status postfix --no-pager
-
-
-
-# ------------------------------------------------------------------
-# 📘 Étape 18 – Rappel sauvegarde distante (optionnel)
-# ------------------------------------------------------------------
-msg_step18_title
-echo -e "\n⚠️ $(msg_step18_note)"
-echo -e "📁 Exemple : rsync -avz /etc/postfix root@NAS:/sauvegardes/postfix/\n"
-
-# ------------------------------------------------------------------
-# 📘 Étape 19 – Fin et rappel vérifications
-# ------------------------------------------------------------------
-msg_step19_title
-echo -e "\n✅ $(msg_step19_success)\n"
-echo -e "📌 $(msg_step19_reminder)\n"
-
-exit 0
+echo -e "$(msg_step16_success)"
