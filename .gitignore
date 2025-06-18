@@ -1,0 +1,46 @@
+# =============================================
+# .gitignore – Serveur Mail 2025 – Tous chapitres
+# pontarlier-informatique – osnetworking
+# =============================================
+
+# 🔒 Fichiers générés automatiquement sur le serveur
+chapitre*/backup/*
+chapitre*/export/*
+chapitre*/logs/*
+
+# ✅ Garder les scripts utiles dans backup/export/logs
+!chapitre*/backup/backup_chap*.sh
+!chapitre*/export/.gitkeep
+!chapitre*/logs/.gitkeep
+
+# ✅ Garder tous les scripts d’installation et de maintenance
+# Ne surtout pas les exclure
+# (ne PAS écrire `chapitre*/install/*` ou `maintenance/*`)
+
+# ✅ Garder toute la documentation
+!chapitre*/documentation/*
+!chapitre*/README*
+
+# ✅ Garder les fichiers de langue (fr.sh, en.sh, etc.)
+!serv_mail/lang/*
+!lang/*
+
+# 🔐 Fichiers sensibles à ne pas versionner
+*.key
+*.pem
+*.crt
+*.env
+.env.*
+
+# 📦 Archives et dumps (pour éviter de les committer)
+*.tar
+*.tar.gz
+*.zip
+*.gz
+*.sql
+
+# 💻 Fichiers système / éditeurs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

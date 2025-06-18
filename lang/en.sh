@@ -10,33 +10,53 @@
 export LANG=C.UTF-8
 export LC_ALL=C.UTF-8
 
-msg_lang="🌍 Selected language: French"
+sg_lang="🌍 Selected language: English"
 msg_select_language="🌐 Choose your language:"
 msg_select_english="1) French"
 msg_select_french="2) English"
-msg_invalid_choice="❌ Invalid choice. French selected by default."
+msg_invalid_choice="❌ Invalid choice. Defaulting to English."
 
 # Common user prompts
-msg_prompt_domain="Enter your domain (e.g. example.com)"
-msg_prompt_mail_from="Shipping email address"
+msg_prompt_domain="Enter your domain (e.g., example.com)"
+msg_prompt_mail_fqdn="Enter your mail server FQDN (e.g., mail.domain.tld)"
+msg_prompt_certbot_email="📧 Enter your email address for Let's Encrypt (Certbot)"
+msg_prompt_mail_from="Sender email address"
 msg_prompt_mail_dest="Destination email address (test)"
-msg_prompt_mail_fqdn="Enter your FQDN mail server name (e.g. mail.domain.tld)"
-msg_prompt_confirm="Do you wish to continue? (o/n)"
+msg_prompt_confirm="Do you want to continue? (y/n)"
 
-# 🔐 General messages for UFW firewall management (used across chapters)
 
+
+# 🔁 General status
+msg_starting="🚀 Starting the script..."
+msg_update_system="🔄 Performing a full system update..."
+msg_done="✅ Done"
+msg_error="❌ An error occurred"
+msg_success="✅ Completed"
+
+# ✅ Dynamic end-of-step message
+msg_step_success_prefix="✅ Step"
+msg_step_success_suffix="completed successfully."
+
+# 🔐 UFW firewall messages
 msg_ufw_not_installed="UFW is not installed. No active firewall detected."
+msg_check_ufw="🔎 Checking the UFW firewall status..."
 msg_active_ufw="✅ UFW is already enabled."
 msg_inactive_ufw="❌ UFW is not enabled on this server."
-msg_ufw_keep_enabled="UFW is enabled. Do you want to keep it enabled?"
+msg_enable_ufw="Would you like to enable UFW to secure your server?"
+msg_enable_ufw_activate="🔐 Enabling UFW firewall..."
+msg_ufw_activated="✅ UFW has been enabled successfully."
+msg_ufw_keep_enabled="UFW is active. Do you want to keep it enabled?"
 msg_ufw_disabling="Disabling UFW..."
 msg_ufw_disabled="UFW has been disabled."
-msg_enable_ufw="Would you like to enable UFW to secure your server?"
-msg_ufw_left_disabled="UFW was left disabled."
-msg_open_ports="🌐 Opening required firewall ports..."
-msg_open_ports_complete_chap2="✅ Ports were opened and UFW was enabled."
+msg_ufw_left_disabled="UFW left disabled."
+msg_open_ports="🌐 Opening necessary ports in the firewall..."
+msg_open_ports_complete="✅ Required ports have been opened."
 msg_press_enter="Press [Enter] to continue..."
 
+# 🌐 Apache + Certbot (shared)
+msg_create_apache_vhost="🛠️ Creating Apache virtualhost..."
+msg_enable_apache_vhost="✅ Apache site enabled and default disabled..."
+msg_run_certbot="🔐 Running Certbot to obtain Let's Encrypt TLS certificate..."
 
 # 🔁 GENERAL MESSAGES - Restore / Uninstall
 msg_revert_intro() {
@@ -338,60 +358,240 @@ msg_uninstall_success="✅ End of Chapter 1 uninstall script"
 
 
 # ==================================================================
-#📘 Chapter 02 - Installing Postfix and Dovecot
+# 📘 Chapter 02 – Installing Postfix and Dovecot
 # ==================================================================
 
 # ------------------------------------------------------------------
-# 📘 Introduction and steps
+# 📘 Chapter 02 - Step 0 –  Introduction
 # ------------------------------------------------------------------
 
-msg_intro_chap2=“🎉 Welcome to the installation script for your secure email server with Postfix and Dovecot.”
-msg_steps_chap2="📜 This script will follow these steps:
-1. Check the status of **UFW** (firewall) and activate it if necessary.
-2. Open the ports needed for email management.
-3. Installing **Postfix** for outgoing email management (SMTP).
-4. Installing **Dovecot** for incoming email management (IMAP/POP3).
-5. Activating **TLS** encryption to secure communications.
-6. Testing to verify that the services are configured correctly."
+msg_step0_banner_chap2="###########################################\n💼 Postfix & Dovecot – Mail Server Setup 💼\n###########################################"
 
+msg_step0_intro_chap2="🎉 Welcome to the secure mail server setup script using Postfix and Dovecot."
 
-msg_banner_chap2=“###########################################\n💼 Postfix & Dovecot – Mail Server Setup 💼\n###########################################”
+msg_steps0_chap2="🧾 This script will perform all the steps required to install Postfix and Dovecot (8 steps in this chapter)."
 
-# ------------------------------------------------------------------
-# 📘 Status messages for UFW and port opening
-# ------------------------------------------------------------------
-
-msg_active_ufw_chap2=“✅ UFW is already enabled.”
-msg_inactive_ufw_chap2="❌ UFW is not enabled on this server."
-msg_enable_ufw_chap2="Would you like to enable UFW to secure your server? (y/n)"
-msg_open_ports_chap2=“🌐 Opening the necessary ports in the firewall...”
-msg_open_ports_complete_chap2="✅ The ports have been successfully opened."
+msg_step0_steps_chap2() {
+  echo -e "
+🧾 This script will execute the following steps:
+1️⃣  Check the UFW firewall status and open necessary ports
+2️⃣  Install Certbot and the Apache web server
+3️⃣  Create the Apache virtualhost + obtain the Let's Encrypt TLS certificate
+4️⃣  Install Postfix and basic configuration
+5️⃣  Install Dovecot with Maildir + TLS configuration
+6️⃣  Add TLS settings in Postfix
+7️⃣  Send a test email with Postfix
+8️⃣  Test secure IMAP connection (port 993)
+"
+}
 
 # ------------------------------------------------------------------
-# 📘 Confirmation messages for installation and testing
+# 📘 Chapter 02 - Step 1 – UFW Firewall and Opening Ports
 # ------------------------------------------------------------------
-msg_install_postfix_chap2=“🌐 Installing Postfix...”
-msg_install_dovecot_chap2="🌐 Installing Dovecot..."
-msg_test_email_chap2="🌐 Testing sending an email via Postfix. You will enter the **subject** and **description** of the email."
-msg_prompt_subject=“Please enter the subject of the email”
-msg_prompt_description="Please enter the description of the email"
-msg_test_imap_chap2="🌐 Testing the IMAP connection via Dovecot..."
-msg_restart_services_chap2="🌐 Restarting Postfix and Dovecot..."
-msg_success_chap2=“🎉 Mail server configuration completed successfully!”
+
+msg_step1_chap2_intro()   { echo "🚀 Starting Step 1 – UFW Firewall Check and Opening Ports."; }
 
 # ------------------------------------------------------------------
-# 📘 Messages to check the status of services
+# 📘 Chapter 02 - Step 2 – Install Certbot + Apache Plugin
 # ------------------------------------------------------------------
-msg_config_test_postfix_chap2="🌐 Checking Postfix configuration..."
-msg_config_test_dovecot_chap2=“🌐 Checking Dovecot configuration...”
+
+msg_step2_chap2_intro()   { echo "🚀 Starting Step 2 – Preparing to obtain a TLS certificate."; }
+msg_install_certbot_chap2="🔧 Installing Certbot (Let's Encrypt client)..."
+msg_install_apache_plugin_chap2="🧩 Installing Apache server and Certbot plugin for Apache..."
 
 # ------------------------------------------------------------------
-# 📘 New dynamic messages to add
+# 📘 Chapter 02 - Step 3 – Obtain Let's Encrypt TLS Certificate with Apache
 # ------------------------------------------------------------------
-msg_check_ufw_chap2="🌐 Checking UFW (firewall) status..."
-msg_postfix_config_chap2() { echo “Configuring Postfix with domain $DOMAIN...”; }
-msg_dovecot_maildir_config_chap2="Configuring Dovecot for Maildir..."
-msg_dovecot_tls_config_chap2="Configuring Dovecot for TLS..."
+
+msg_step3_chap2_intro()   { echo "🚀 Starting Step 3 – Obtaining TLS certificate with Apache."; }
+
+
+# ------------------------------------------------------------------
+# 📘 Chapter 02 – Step 4: Install Postfix + master.cf config
+# ------------------------------------------------------------------
+
+msg_step4_chap2_intro() {
+  echo "🚀 Starting Step 4 – Installing Postfix + master.cf config."
+}
+
+msg_step4_maincf_done="💾 main.cf backup completed."
+msg_step4_mastercf_done="💾 master.cf backup completed."
+
+msg_step4_chap2_mastercf_intro() {
+  echo "🔧 Enabling submission (587) and smtps (465) services in master.cf..."
+}
+
+msg_step4_chap2_mastercf_added="✅ Submission and SMTPS blocks added to master.cf."
+msg_step4_chap2_mastercf_already_present="ℹ️  Submission and SMTPS blocks already present in master.cf."
+msg_step4_chap2_mastercf_success="✅ Postfix successfully restarted."
+
+msg_step4_postfix_config_chap2="⚙️  Configuring Postfix with default parameters..."
+msg_step4_postfix_config_domain_chap2() {
+  echo "⚙️  Configuring Postfix with domain $DOMAIN..."
+}
+
+# ------------------------------------------------------------------
+# 📘 Chapter 02 – Step 5: Installing Dovecot
+# ------------------------------------------------------------------
+
+msg_step5_chap2_intro() {
+  echo "🚀 Starting Step 5 – Installing Dovecot (IMAP/POP3 server)..."
+}
+
+msg_step5_install_dovecot_chap2="📦 Installing Dovecot packages: core, imapd, pop3d..."
+msg_step5_check_dovecot_version="🔍 Checking installed Dovecot version..."
+
+
+# ------------------------------------------------------------------
+# 📘 Chapter 02 – Step 6: Enable IMAP/POP3 protocols
+# ------------------------------------------------------------------
+
+msg_step6_chap2_intro() {
+  echo "🚀 Starting Step 6 – Enabling IMAP and POP3 protocols..."
+}
+
+msg_step6_dovecot_bak="💾 Backup of dovecot.conf completed."
+msg_step6_enable_protocols="🔧 Enabling IMAP and POP3 protocols in dovecot.conf..."
+msg_step6_restart_dovecot="🔄 Restarting Dovecot service..."
+
+
+
+# ------------------------------------------------------------------
+# 📘 Chapter 02 – Step 7: Maildir format configuration
+# ------------------------------------------------------------------
+
+msg_step7_chap2_intro() {
+  echo "🚀 Starting Step 7 – Configuring Maildir format in Dovecot..."
+}
+
+msg_step7_dovecot_mail_bak_done="💾 File 10-mail.conf copied with .bak_DATE suffix."
+msg_step7_config_mail_location="🛠️ Applying maildir:~/Maildir format in 10-mail.conf..."
+msg_step7_add_priv_group="➕ Adding mail_privileged_group = mail"
+msg_step7_priv_group_already="ℹ️  mail_privileged_group already present in the file."
+msg_step7_add_usergroup="👤 Adding user dovecot to mail group..."
+msg_step7_restart_dovecot="🔄 Restarting Dovecot service..."
+
+# ------------------------------------------------------------------
+# 📘 Chapter 02 – Step 8: Configure Dovecot LMTP
+# ------------------------------------------------------------------
+
+msg_step8_chap2_intro() {
+  echo "🚀 Starting Step 8 – Configuring Dovecot to deliver emails using LMTP."
+}
+
+msg_step8_install_lmtpd="📦 Installing dovecot-lmtpd package..."
+msg_step8_update_dovecot_conf="🛠️ Editing /etc/dovecot/dovecot.conf to enable LMTP..."
+msg_step8_update_master_conf="🛠️ Configuring LMTP service in 10-master.conf..."
+msg_step8_update_postfix_maincf="🛠️ Adding LMTP configuration to Postfix (main.cf)..."
+
+msg_step8_done="✅ Step 8 completed: Dovecot will now use LMTP to deliver emails in Maildir format."
+
+# ------------------------------------------------------------------
+# 📘 Chapter 02 – Step 9: Dovecot Authentication Mechanism
+# ------------------------------------------------------------------
+
+msg_step9_chap2_intro() {
+  echo "🚀 Starting Step 9 – Configuring Dovecot authentication mechanism..."
+}
+
+msg_step9_10auth_done="💾 Backup of 10-auth.conf completed."
+msg_step9_dovecot_disable_plaintext="🔐 Enabling protection against plaintext auth (disable_plaintext_auth = yes)..."
+msg_step9_dovecot_username_format="👤 Simplifying username format (auth_username_format = %n)..."
+msg_step9_dovecot_mechanisms="🔧 Adding LOGIN auth mechanism (auth_mechanisms = plain login)..."
+
+# ------------------------------------------------------------------
+# 📘 Chapter 02 – Step 10: Enable TLS Encryption in Dovecot
+# ------------------------------------------------------------------
+
+msg_step10_chap2_intro() {
+  echo "🚀 Starting Step 10 – Configuring TLS/SSL in Dovecot..."
+}
+msg_step10_chap2_tls_config="🔐 Configuring Dovecot TLS..."
+msg_step10_chap2_tls_domain() {
+  echo "🔧 Secured domain: $DOMAIN"
+}
+msg_step10_chap2_tls_backup_done="💾 Backup of 10-ssl.conf completed."
+
+# ------------------------------------------------------------------
+# 📘 Chapter 02 – Disable OpenSSL's FIPS provider (Ubuntu 22.04)
+# ------------------------------------------------------------------
+# ------------------------------------------------------------------
+# 📘 Chapter 02 – Step 11: Disable FIPS Provider in OpenSSL
+# ------------------------------------------------------------------
+
+msg_step11_chap2_intro="🚫 Step 11 – Disabling FIPS provider in OpenSSL (Ubuntu 22.04)..."
+msg_step11_chap2_openssl_backup_done="💾 openssl.cnf backup completed."
+msg_step11_chap2_fips_disabled="✅ FIPS provider disabled in OpenSSL."
+msg_step11_chap2_already_commented="ℹ️ FIPS line was already commented."
+msg_step11_chap2_openssl_check="🔎 Checking OpenSSL configuration after modification..."
+
+# ------------------------------------------------------------------
+# 📘 Chapter 02 – Step 12: SASL Authentication (SMTP AUTH)
+# ------------------------------------------------------------------
+
+msg_step12_chap2_intro="🔐 Configuring SASL authentication via Dovecot for Postfix..."
+
+msg_step12_chap2_backup_done="💾 Backup of 10-master.conf completed."
+msg_step12_chap2_already_configured="ℹ️  SASL block already present in 10-master.conf, no changes made."
+msg_step12_chap2_sasl_auth_configured="✅ SASL block added to 10-master.conf for Postfix."
+
+
+# ------------------------------------------------------------------
+# 📘 Chapter 02 – Step 13: Auto-Renew TLS Certificate
+# ------------------------------------------------------------------
+
+msg_step13_chap2_dryrun_check="🧪 Testing auto-renewal with: certbot renew --dry-run"
+msg_step13_chap2_dryrun_success="✅ Dry-run successful: renewal works correctly."
+msg_step13_chap2_dryrun_failed="❌ Dry-run test failed. Please check the log file."
+msg_step13_chap2_log_hint="Log file location"
+
+# ------------------------------------------------------------------
+# 📘 Chapter 02 – Step 14: Dovecot Automatic Restart
+# ------------------------------------------------------------------
+
+msg_step14_chap2_intro="🔄 Setting up Dovecot automatic restart with systemd..."
+msg_step14_chap2_backup_done="💾 Existing restart.conf file backed up."
+msg_step14_chap2_create_file="📝 Writing /etc/systemd/system/dovecot.service.d/restart.conf..."
+msg_step14_chap2_reload_systemd="🔁 systemd reload completed."
+
+
+# ==========================================================
+# 🧹 Chapitre 02 - Script de désinstallation
+# 📦 pontarlier-informatique - osnetworking
+# ==========================================================
+
+# ============================================================
+# 🧼 Chapitre 02 - Étape 1 - Restauration des fichiers de configuration
+# ============================================================
+msg_step1_restore_configs="Restauration des fichiers de configuration modifiés..."
+
+# ============================================================
+# Chapitre 02 - Étape 2 - Suppression de la configuration de redémarrage automatique Dovecot
+# ============================================================
+msg_step2_remove_restart="Suppression de la configuration de redémarrage automatique Dovecot..."
+
+# ============================================================
+# 🧼 Chapitre 02 - Étape 3 - Suppression de Certbot, Apache et du vhost associé
+# ============================================================
+msg_step3_apache_certbot="Suppression de Certbot, Apache et du vhost associé..."
+
+# ============================================================
+# 🧼 Chapitre 02 - Suppression des paquets Dovecot (core, imapd, pop3d, lmtpd)
+# ============================================================
+msg_step4_remove_dovecot="Suppression des paquets Dovecot (core, imapd, pop3d, lmtpd)..."
+
+# ============================================================
+# 🧼 Chapitre 02 - Étape 5 - Nettoyage Postfix (TLS)
+# ============================================================
+msg_step5_restart="Redémarrage de Postfix et Dovecot..."
+
+# ============================================================
+# ✅ Chapitre 02 - Fin de désinstallation
+# ============================================================
+msg_uninstall_success="✅ Désinstallation complète du Chapitre 2 effectuée avec succès."
+
+
+
 
 # ============================================================
 # 📘 MESSAGES – Chapter 3: PostfixAdmin + Virtual Accounts

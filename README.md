@@ -1,4 +1,4 @@
-# 📬 Mail Server 2025 – Complete Configuration (Ubuntu + Postfix + Dovecot + Roundcube + secuité)
+# 📬 Mail Server 2025 – Complete Configuration (Ubuntu + Postfix + Dovecot)
 
 > 🔒 Professional multi-domain mail infrastructure, based on [LinuxBabe's guide](https://www.linuxbabe.com)
 
@@ -24,7 +24,7 @@ This repository provides a **modular**, **interactive**, and **multilingual** st
 
 ```bash
 /opt/serv_mail/
-├── chapitre_01/           # Ubuntu Ubuntu installation and SSH configuration 
+├── chapitre_01/           # Ubuntu base + SSH configuration
 ├── chapitre_02/           # Network setup and DNS configuration
 ├── chapitre_03/           # Postfix + Dovecot (IMAP) with TLS
 ├── chapitre_04/           # SPF & DKIM via OpenDKIM
